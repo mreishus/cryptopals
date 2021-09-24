@@ -16,7 +16,7 @@ best score.
 """
 
 import re
-from shared import hex_string_xor, hex_bytes_xor
+from shared import hex_bytes_xor
 from eng_freq import frequency_score
 
 def main():

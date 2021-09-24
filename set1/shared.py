@@ -23,7 +23,7 @@ def hex_bytes_xor(hb1, hb2):
     """
     output = bytearray(b"")
     for i, b1 in enumerate(hb1):
-        b2 = hb2[i]
+        b2 = hb2[i % len(hb2)]
         b3 = b1 ^ b2
         output.append(b3)
     return output
