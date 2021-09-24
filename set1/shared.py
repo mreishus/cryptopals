@@ -3,12 +3,33 @@
 b64_table = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 
 def hex_string_to_b64_string(hex_string):
+    """
+    Input:  Hex String like "4d616e" (Ascii: "Man")
+    Output: B64 String like "TWFu"
+
+    INPUT
+    M          a         n
+    77         97        110
+    0x4d       0x61      0x6e
+    01001101   01100001  01101110  [Groups of 8]
+    ------------------------------
+    010011  010110  000101 101110  [Same bits, Groups of 6]
+    0x54    0x57    0x46   0x75
+    84      87      70     117
+    T       W       F      u
+    OUTPUT
+    """
     hex_bytes = bytes.fromhex(hex_string)
     b64_bytes = hex_bytes_to_b64_bytes(hex_bytes)
     return b64_bytes_to_b64_string(b64_bytes)
 
 
 def hex_bytes_to_b64_bytes(hex_bytes):
+    """
+    Input:  Hex bytes like bytes.fromhex("4d616e")
+    Output: B64 bytes like bytes([19, 22, 5, 46])
+    (See example above)
+    """
     b64_bytes = bytearray(b"")
     next_b64_byte = 0
     bits_taken = 0
@@ -36,9 +57,13 @@ def hex_bytes_to_b64_bytes(hex_bytes):
         next_b64_byte <<= (6 - bits_taken)
         b64_bytes.append(next_b64_byte)
 
-    return b64_bytes
+    return bytes(b64_bytes)
 
 def b64_bytes_to_b64_string(b64_bytes):
+    """
+    Input:  B64 bytes like bytes([19, 22, 5, 46])
+    Output: B64 string like "TWfu"
+    """
     output = ""
     parity = 0
     for byte in b64_bytes:
