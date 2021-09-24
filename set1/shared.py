@@ -21,6 +21,8 @@ def hex_bytes_xor(hb1, hb2):
     Input:  2 byte arrays
     Output: Byte array
     """
+    if len(hb1) < len(hb2):
+        return hex_bytes_xor(hb2, hb1)
     output = bytearray(b"")
     for i, b1 in enumerate(hb1):
         b2 = hb2[i % len(hb2)]
