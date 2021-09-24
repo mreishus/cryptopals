@@ -1,4 +1,36 @@
-#/usr/bin/env python
+#!/usr/bin/env python
+
+##########
+# Chall 2
+##########
+
+def hex_string_xor(hs1, hs2):
+    """
+    XOR
+    Input:  2 hex strings
+    Output: hex string
+    """
+    hb1 = bytes.fromhex(hs1)
+    hb2 = bytes.fromhex(hs2)
+    output = hex_bytes_xor(hb1, hb2)
+    return output.hex()
+
+def hex_bytes_xor(hb1, hb2):
+    """
+    XOR
+    Input:  2 byte arrays
+    Output: Byte array
+    """
+    output = bytearray(b"")
+    for i, b1 in enumerate(hb1):
+        b2 = hb2[i]
+        b3 = b1 ^ b2
+        output.append(b3)
+    return output
+
+##########
+# Chall 1
+##########
 
 b64_table = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 

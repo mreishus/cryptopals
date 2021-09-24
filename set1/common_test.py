@@ -5,6 +5,23 @@ Run "pytest" to execute
 from unittest import TestCase, main
 
 from shared import hex_string_to_b64_string, hex_bytes_to_b64_bytes, b64_bytes_to_b64_string
+from shared import hex_string_xor, hex_bytes_xor
+
+class Chal2TestCase(TestCase):
+    def test_string_xor(self):
+        x1 = "1c0111001f010100061a024b53535009181c"
+        x2 = "686974207468652062756c6c277320657965"
+
+        got  = hex_string_xor(x1, x2)
+        want = "746865206b696420646f6e277420706c6179"
+        self.assertEqual(got, want)
+
+    def test_bytes_xor(self):
+        b1 = bytes([1,   1, 16, 16, 16])
+        b2 = bytes([1, 255, 31, 32, 33])
+        got = hex_bytes_xor(b1, b2)
+        want = bytes([0, 254, 15, 48, 49])
+        self.assertEqual(got, want)
 
 class Chal1TestCase(TestCase):
     def test_hex_string_to_b64_string(self):
