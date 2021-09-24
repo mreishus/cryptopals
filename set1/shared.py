@@ -1,6 +1,29 @@
 #!/usr/bin/env python
 
 ##########
+# Chall 6
+##########
+def hamming_distance(bs1, bs2):
+    """
+    Number of differing bits in two equal length byte arrays
+    Input1: bytes
+    Input2: bytes
+    Output: int
+    """
+    if len(bs1) != len(bs2):
+        raise ValueError()
+    total = 0
+    for i, byte1 in enumerate(bs1):
+        byte2 = bs2[i]
+
+        for j in range(8):
+            bit1 = byte1 & (1 << j)
+            bit2 = byte2 & (1 << j)
+            if bit1 != bit2:
+                total += 1
+    return total
+
+##########
 # Chall 2
 ##########
 

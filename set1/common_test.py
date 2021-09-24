@@ -6,6 +6,17 @@ from unittest import TestCase, main
 
 from shared import hex_string_to_b64_string, hex_bytes_to_b64_bytes, b64_bytes_to_b64_string
 from shared import hex_string_xor, hex_bytes_xor
+from shared import hamming_distance
+
+class Chal6TestCase(TestCase):
+    def test_hamming_distance(self):
+        str1 = "this is a test"
+        str2 = "wokka wokka!!!"
+        str1b = str1.encode("ascii")
+        str2b = str2.encode("ascii")
+        got = hamming_distance(str1b, str2b)
+        want = 37
+        self.assertEqual(got, want)
 
 class Chal2TestCase(TestCase):
     def test_string_xor(self):
