@@ -48,16 +48,8 @@ def chunks(lst, n):
         yield lst[i : i + n]
 
 
-def main():
-    key_ascii = "YELLOW SUBMARINE"
-    key_bytes = str.encode(key_ascii)
-
-    data = get_data("10.txt")
-    source_b64 = "".join(data)
-    source_bytes = base64.b64decode(source_b64)
-
+def cbc_decrypt(source_bytes, key_bytes, iv=b"\x00" * 16):
     bs = 16  # block_size
-    iv = b"\x00" * bs
     prev = iv
     decrypted = bytearray()
     for block in chunks(source_bytes, bs):
@@ -70,6 +62,22 @@ def main():
         # print(f"decrypted+xored {output2}")
         decrypted.extend(output2)
         prev = block
+    return decrypted
+
+
+def cbc_encrypt(plaintext_bytes, key_bytes):
+    pass
+
+
+def main():
+    key_ascii = "YELLOW SUBMARINE"
+    key_bytes = str.encode(key_ascii)
+
+    data = get_data("10.txt")
+    source_b64 = "".join(data)
+    source_bytes = base64.b64decode(source_b64)
+
+    decrypted = cbc_decrypt(source_bytes, key_bytes)
     print(decrypted)
 
 
