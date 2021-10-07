@@ -11,7 +11,7 @@ function that generates a random key and encrypts under it.
 
 The function should look like:
 
-encryption_oracle(your-input) => [MEANINGLESS JIBBER JABBER]
+encryption_oracle_11(your-input) => [MEANINGLESS JIBBER JABBER]
 
 Under the hood, have the function append 5-10 bytes (count chosen randomly)
 before the plaintext and 5-10 bytes after the plaintext.
@@ -33,10 +33,12 @@ from shared import (
     cbc_encrypt,
     random_aes_key,
     random_bytes,
+    repeated_blocks,
+    detect_encryption_mode,
 )
 
 
-def encryption_oracle(bytes_in):
+def encryption_oracle_11(bytes_in):
     """Encrypts data under an unknown key"""
     # Append 5-10 bytes before plaintext
     pad_before = random_bytes(randint(5, 10))
@@ -64,28 +66,9 @@ def chunks(lst, n):
         yield lst[i : i + n]
 
 
-def repeated_blocks(source_bytes):
-    seen = defaultdict(int)
-    for block in chunks(source_bytes, 16):
-        seen[block] += 1
-    repeats = sum(x - 1 for x in seen.values())
-    return repeats
-
-
-def detect_encryption_mode(black_box):
-    """Given a black_box bytes -> bytes function, detect if it
-    uses ECB or CBC"""
-    bytes_in = b"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-    bytes_out = black_box(bytes_in)
-    repeats = repeated_blocks(bytes_out)
-    if repeats > 0:
-        return "ecb"
-    return "cbc"
-
-
 def main():
     source_bytes = b"Hello, this is a test sentence. How am I supposed to detect the encryption mode? Wait, I am allowed to choose the input to the oracle, so I will create a repeated string and look for repeated blocks ...................................................................................."
-    cypher_bytes = encryption_oracle(source_bytes)
+    cypher_bytes = encryption_oracle_11(source_bytes)
     print(cypher_bytes)
     repeats = repeated_blocks(cypher_bytes)
     if repeats > 0:
@@ -96,7 +79,7 @@ def main():
     # Let's extract this to a function
     print("--")
     for _ in range(5):
-        print(detect_encryption_mode(encryption_oracle))
+        print(detect_encryption_mode(encryption_oracle_11))
 
 
 if __name__ == "__main__":

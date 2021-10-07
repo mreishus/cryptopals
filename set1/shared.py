@@ -1,10 +1,32 @@
 #!/usr/bin/env python
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import unpad
+from random import randint
+from collections import defaultdict
 
 ##########
 # Chall 11
 ##########
+
+
+def detect_encryption_mode(black_box):
+    """Given a black_box bytes -> bytes function, detect if it
+    uses ECB or CBC"""
+    bytes_in = b"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    bytes_out = black_box(bytes_in)
+    repeats = repeated_blocks(bytes_out)
+    if repeats > 0:
+        return "ecb"
+    return "cbc"
+
+
+def repeated_blocks(source_bytes):
+    """Bytes -> Int"""
+    seen = defaultdict(int)
+    for block in chunks(source_bytes, 16):
+        seen[block] += 1
+    repeats = sum(x - 1 for x in seen.values())
+    return repeats
 
 
 def random_aes_key():
