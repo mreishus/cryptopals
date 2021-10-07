@@ -2,6 +2,48 @@
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import unpad
 
+
+##########
+# Chall 10
+##########
+
+
+def cbc_decrypt(source_bytes, key_bytes, iv=b"\x00" * 16):
+    bs = 16  # block_size
+    prev = iv
+    decrypted = bytearray()
+    for block in chunks(source_bytes, bs):
+        block = pkcs7_pad(block, bs)
+        output1 = ecb_decrypt(block, key_bytes)
+        output2 = hex_bytes_xor(output1, prev)
+        # print("--")
+        # print(f"block           {block}")
+        # print(f"decrypted       {output1}")
+        # print(f"decrypted+xored {output2}")
+        decrypted.extend(output2)
+        prev = block
+    return decrypted
+
+
+def cbc_encrypt(plaintext_bytes, key_bytes, iv=b"\x00" * 16):
+    bs = 16
+    encrypted = bytearray()
+    prev = iv
+    for block in chunks(plaintext_bytes, bs):
+        ## unpad??
+        out1 = hex_bytes_xor(block, prev)
+        out2 = ecb_encrypt(out1, key_bytes)
+        encrypted.extend(out2)
+        prev = out2
+    return encrypted
+
+
+def chunks(lst, n):
+    """Yield successive n-sized chunks from lst."""
+    for i in range(0, len(lst), n):
+        yield lst[i : i + n]
+
+
 ##########
 # Chall 9
 ##########
