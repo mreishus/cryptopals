@@ -2,10 +2,28 @@
 import base64
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import unpad
-from shared import hex_bytes_xor
+
 # requires pycryptodome:
 # yay -Syu python-pycryptodome
 # or https://github.com/Legrandin/pycryptodome
+
+"""
+AES in ECB mode
+https://cryptopals.com/sets/1/challenges/7
+
+The Base64-encoded content in this file has been encrypted via AES-128 in ECB
+mode under the key
+
+"YELLOW SUBMARINE".
+
+(case-sensitive, without the quotes; exactly 16 characters; I like "YELLOW
+SUBMARINE" because it's exactly 16 bytes long, and now you do too).
+
+Decrypt it. You know the key, after all.
+
+Easiest way: use OpenSSL::Cipher and give it AES-128-ECB as the cipher.
+"""
+
 
 def get_data(filename):
     lines = []
@@ -13,10 +31,6 @@ def get_data(filename):
         lines = file.readlines()
         lines = [line.rstrip() for line in lines]
     return lines
-
-
-def ecb_decrypt(key_bytes, source_bytes):
-    return hex_bytes_xor(source_bytes, key_bytes)
 
 
 def main():
@@ -67,6 +81,7 @@ def main():
     #
     # Hard mode: Implement my own AES ECB (Not doing this)
     # I don't think the exercise wants me to do this, either.
+
 
 if __name__ == "__main__":
     main()
