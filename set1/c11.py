@@ -26,6 +26,7 @@ or CBC, tells you which one is happening.
 
 """
 
+from collections import defaultdict
 from random import randint
 from shared import (
     ecb_encrypt,
@@ -59,16 +60,38 @@ def encryption_oracle(bytes_in):
     # 50%/50% split between ECB and CBC
     if randint(1, 2) == 1:
         # ECB
+        print("[Oracle: ECB] Shhhhh, don't tell anyone, but I decided to use ECB.")
         return ecb_encrypt(source_bytes, key)
     else:
         # CBC
+        print("[Oracle: CBC] Shhhhh, don't tell anyone, but I decided to use CBC.")
         iv = random_aes_key()
         return cbc_encrypt(source_bytes, key, iv)
 
 
+def chunks(lst, n):
+    """Yield successive n-sized chunks from lst."""
+    for i in range(0, len(lst), n):
+        yield lst[i : i + n]
+
+
+def repeated_blocks(source_bytes):
+    seen = defaultdict(int)
+    for block in chunks(source_bytes, 16):
+        seen[block] += 1
+    repeats = sum(x - 1 for x in seen.values())
+    return repeats
+
+
 def main():
-    source_bytes = b"Hello, this is a test sentence. How am I supposed to detect the encryption mode?"
-    print(encryption_oracle(source_bytes))
+    source_bytes = b"Hello, this is a test sentence. How am I supposed to detect the encryption mode? Wait, I am allowed to choose the input to the oracle, so I will create a repeated string and look for repeated blocks ...................................................................................."
+    cypher_bytes = encryption_oracle(source_bytes)
+    print(cypher_bytes)
+    repeats = repeated_blocks(cypher_bytes)
+    if repeats > 0:
+        print(f"Found {repeats} repeated blocks, this is probably ECB...")
+    else:
+        print("Found no repeated blocks, this is probably CBC...")
 
 
 if __name__ == "__main__":
