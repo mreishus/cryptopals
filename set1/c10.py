@@ -65,8 +65,17 @@ def cbc_decrypt(source_bytes, key_bytes, iv=b"\x00" * 16):
     return decrypted
 
 
-def cbc_encrypt(plaintext_bytes, key_bytes):
-    pass
+def cbc_encrypt(plaintext_bytes, key_bytes, iv=b"\x00" * 16):
+    bs = 16
+    encrypted = bytearray()
+    prev = iv
+    for block in chunks(plaintext_bytes, bs):
+        ## unpad??
+        out1 = hex_bytes_xor(block, prev)
+        out2 = ecb_encrypt(out1, key_bytes)
+        encrypted.extend(out2)
+        prev = out2
+    return encrypted
 
 
 def main():
@@ -78,7 +87,13 @@ def main():
     source_bytes = base64.b64decode(source_b64)
 
     decrypted = cbc_decrypt(source_bytes, key_bytes)
+    print("Decrypted:")
     print(decrypted)
+    print("")
+
+    re_encrypted = cbc_encrypt(decrypted, key_bytes)
+    print("Am I able to reencrypt?")
+    print(re_encrypted == source_bytes)
 
 
 if __name__ == "__main__":
