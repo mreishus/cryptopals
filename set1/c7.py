@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 import base64
-from Crypto.Cipher import AES
-from Crypto.Util.Padding import unpad
 
 # requires pycryptodome:
 # yay -Syu python-pycryptodome
@@ -24,6 +22,8 @@ Decrypt it. You know the key, after all.
 Easiest way: use OpenSSL::Cipher and give it AES-128-ECB as the cipher.
 """
 
+from shared import ecb_decrypt, ecb_encrypt
+
 
 def get_data(filename):
     lines = []
@@ -41,11 +41,16 @@ def main():
     key_ascii = "YELLOW SUBMARINE"
     key_bytes = str.encode(key_ascii)
 
+    plaintext_bytes = ecb_decrypt(source_bytes, key_bytes)
     ## ECB Decrypt: Easy Mode:
-    cipher = AES.new(key_bytes, AES.MODE_ECB)
-    plain_text = unpad(cipher.decrypt(source_bytes), AES.block_size)
     print("EASY MODE (Using a library to handle AES in ECB mode):")
-    print("The message was: ", plain_text)
+    print("The message was: ", plaintext_bytes)
+    print("--")
+    ## ECB Encrypt:
+    print("Trying to reencrypt and see if we match the original source:")
+    reencrypted = ecb_encrypt(plaintext_bytes, key_bytes)
+    print("Does it match?")
+    print(reencrypted == source_bytes)
     # how AES works:
     #   https://www.youtube.com/watch?v=DLjzI5dX8jc
     #     ^ What is an SP Network

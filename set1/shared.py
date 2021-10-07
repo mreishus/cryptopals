@@ -1,4 +1,57 @@
 #!/usr/bin/env python
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import unpad
+
+##########
+# Chall 9
+##########
+
+
+def pkcs7_pad(bytes_in, block_size):
+    """
+    Pad input bytes [bytes_in] to match a multiple of block_size
+
+    https://en.wikipedia.org/wiki/Padding_(cryptography)#PKCS#5_and_PKCS#7
+    https://datatracker.ietf.org/doc/html/rfc5652#section-6.3
+
+    Padding by adding whole bytes.
+    The value of each byte added is the number of bytes added.
+    If we have to add 4 bytes, then we add "04 04 04 04".
+    If we have to add 5 bytes, we add "05 05 05 05 05".
+    etc.
+    If we have to add more than 255 bytes (ff), then we crash.
+    """
+    if block_size >= 256:
+        raise ValueError("pkcs7_pad: Block size must be below 256")
+    count_to_add = (block_size - len(bytes_in)) % block_size
+    pad_bytes = count_to_add.to_bytes(1, "big")
+    pad_bytes *= count_to_add
+    return bytes_in + pad_bytes
+
+
+##########
+# Chall 7
+##########
+
+
+def ecb_decrypt(source_bytes, key_bytes):
+    """
+    Easy mode AES ECB using a library.
+    See more about it in c7.py.
+    """
+    cipher = AES.new(key_bytes, AES.MODE_ECB)
+    return unpad(cipher.decrypt(source_bytes), AES.block_size)
+
+
+def ecb_encrypt(plaintext_bytes, key_bytes):
+    """
+    Easy mode AES ECB using a library.
+    See more about it in c7.py.
+    """
+    cipher = AES.new(key_bytes, AES.MODE_ECB)
+    plaintext_bytes = pkcs7_pad(plaintext_bytes, 16)
+    return cipher.encrypt(plaintext_bytes)
+
 
 ##########
 # Chall 6
@@ -23,9 +76,11 @@ def hamming_distance(bs1, bs2):
                 total += 1
     return total
 
+
 ##########
 # Chall 2
 ##########
+
 
 def hex_string_xor(hs1, hs2):
     """
@@ -37,6 +92,7 @@ def hex_string_xor(hs1, hs2):
     hb2 = bytes.fromhex(hs2)
     output = hex_bytes_xor(hb1, hb2)
     return output.hex()
+
 
 def hex_bytes_xor(hb1, hb2):
     """
@@ -53,11 +109,13 @@ def hex_bytes_xor(hb1, hb2):
         output.append(b3)
     return output
 
+
 ##########
 # Chall 1
 ##########
 
 b64_table = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+
 
 def hex_string_to_b64_string(hex_string):
     """
@@ -111,10 +169,11 @@ def hex_bytes_to_b64_bytes(hex_bytes):
     # Sometimes we need to add 0s to fill out the last character
     if bits_taken > 0:
         # We need (6 - bits_taken) more bits: Add 0s
-        next_b64_byte <<= (6 - bits_taken)
+        next_b64_byte <<= 6 - bits_taken
         b64_bytes.append(next_b64_byte)
 
     return bytes(b64_bytes)
+
 
 def b64_bytes_to_b64_string(b64_bytes):
     """
