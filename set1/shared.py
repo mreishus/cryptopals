@@ -40,6 +40,7 @@ def ecb_decrypt(source_bytes, key_bytes):
     See more about it in c7.py.
     """
     cipher = AES.new(key_bytes, AES.MODE_ECB)
+    return cipher.decrypt(source_bytes)
     return unpad(cipher.decrypt(source_bytes), AES.block_size)
 
 

@@ -26,8 +26,12 @@ Don't cheat.
 Do not use OpenSSL's CBC code to do CBC mode, even to verify your results.
 What's the point of even doing this stuff if you aren't going to learn from it?
 
+https://www.youtube.com/watch?v=0abs6qfuLpg
+^^ Modes of operation: ECB vs CBC vs others
+
 """
 import base64
+from shared import pkcs7_pad, hex_bytes_xor, ecb_encrypt, ecb_decrypt
 
 
 def get_data(filename):
@@ -38,11 +42,35 @@ def get_data(filename):
     return lines
 
 
+def chunks(lst, n):
+    """Yield successive n-sized chunks from lst."""
+    for i in range(0, len(lst), n):
+        yield lst[i : i + n]
+
+
 def main():
+    key_ascii = "YELLOW SUBMARINE"
+    key_bytes = str.encode(key_ascii)
+
     data = get_data("10.txt")
     source_b64 = "".join(data)
     source_bytes = base64.b64decode(source_b64)
-    print(source_bytes)
+
+    bs = 16  # block_size
+    iv = b"\x00" * bs
+    prev = iv
+    decrypted = bytearray()
+    for block in chunks(source_bytes, bs):
+        block = pkcs7_pad(block, bs)
+        output1 = ecb_decrypt(block, key_bytes)
+        output2 = hex_bytes_xor(output1, prev)
+        # print("--")
+        # print(f"block           {block}")
+        # print(f"decrypted       {output1}")
+        # print(f"decrypted+xored {output2}")
+        decrypted.extend(output2)
+        prev = block
+    print(decrypted)
 
 
 if __name__ == "__main__":
