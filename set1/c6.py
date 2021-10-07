@@ -29,6 +29,7 @@ import itertools
 from shared import hamming_distance, hex_bytes_xor
 from eng_freq import frequency_score
 
+
 def get_data(filename):
     lines = []
     with open(filename) as file:
@@ -36,10 +37,12 @@ def get_data(filename):
         lines = [line.rstrip() for line in lines]
     return lines
 
+
 def chunks(lst, n):
     """Yield successive n-sized chunks from lst."""
     for i in range(0, len(lst), n):
-        yield lst[i:i + n]
+        yield lst[i : i + n]
+
 
 def crack(source_bytes, keysize):
     print(f"Trying to crack with keysize {keysize}")
@@ -57,22 +60,27 @@ def crack(source_bytes, keysize):
     print(f"Possible key: {fullkey}")
     return fullkey
 
+
 def solve_single_char_xor(source_bytes):
     candidates = []
-    for key in range(0xff):
+    for key in range(0xFF):
         decode_bytes = hex_bytes_xor(source_bytes, bytes([key]))
-        decode_string = str("".join([chr(byte) for byte in decode_bytes])) #decode_bytes.decode("cp1252")
+        decode_string = str(
+            "".join([chr(byte) for byte in decode_bytes])
+        )  # decode_bytes.decode("cp1252")
         # print(decode_string)
         # print(f"{i} {decode_bytes} {frequency_score(decode_string)}")
-        candidates.append({
-            'key': key,
-            'decode_bytes': decode_bytes,
-            'decode_string': decode_string,
-            'score': frequency_score(decode_string)
-        })
-    winner = min(candidates, key=lambda x: x['score'])
+        candidates.append(
+            {
+                "key": key,
+                "decode_bytes": decode_bytes,
+                "decode_string": decode_string,
+                "score": frequency_score(decode_string),
+            }
+        )
+    winner = min(candidates, key=lambda x: x["score"])
     # print(winner)
-    return winner['key']
+    return winner["key"]
 
 
 def main():
@@ -83,26 +91,34 @@ def main():
     keysize_candidates = []
     for keysize in range(2, 41):
         block1 = source_bytes[0:keysize]
-        block2 = source_bytes[keysize:keysize*2]
-        block3 = source_bytes[keysize*2:keysize*3]
-        block4 = source_bytes[keysize*3:keysize*4]
-        block5 = source_bytes[keysize*4:keysize*5]
+        block2 = source_bytes[keysize : keysize * 2]
+        block3 = source_bytes[keysize * 2 : keysize * 3]
+        block4 = source_bytes[keysize * 3 : keysize * 4]
+        block5 = source_bytes[keysize * 4 : keysize * 5]
 
         distances = []
-        block_combos = itertools.combinations([block1, block2, block3, block4, block5], 2)
+        block_combos = itertools.combinations(
+            [block1, block2, block3, block4, block5], 2
+        )
         for block_a, block_b in block_combos:
             this_distance = (hamming_distance(block_a, block_b) * 1.0) / keysize
             distances.append(this_distance)
 
         distance = sum(distances) / 5.0
-        keysize_candidates.append({'keysize': keysize, 'distance': distance})
+        keysize_candidates.append({"keysize": keysize, "distance": distance})
 
     # Get the 3 keysizes with the smallest block distances
-    keysize_candidates = list(map(lambda c: c['keysize'], heapq.nsmallest(3, keysize_candidates, key=lambda x: x['distance'])))
+    keysize_candidates = list(
+        map(
+            lambda c: c["keysize"],
+            heapq.nsmallest(3, keysize_candidates, key=lambda x: x["distance"]),
+        )
+    )
     for keysize in keysize_candidates:
         key = crack(source_bytes, keysize)
         decode_bytes = hex_bytes_xor(source_bytes, key)
         print(decode_bytes)
+
 
 if __name__ == "__main__":
     main()
