@@ -22,7 +22,7 @@ def cbc_decrypt(source_bytes, key_bytes, iv=b"\x00" * 16):
         # print(f"decrypted+xored {output2}")
         decrypted.extend(output2)
         prev = block
-    return decrypted
+    return bytes(decrypted)
 
 
 def cbc_encrypt(plaintext_bytes, key_bytes, iv=b"\x00" * 16):
@@ -35,7 +35,7 @@ def cbc_encrypt(plaintext_bytes, key_bytes, iv=b"\x00" * 16):
         out2 = ecb_encrypt(out1, key_bytes)
         encrypted.extend(out2)
         prev = out2
-    return encrypted
+    return bytes(encrypted)
 
 
 def chunks(lst, n):

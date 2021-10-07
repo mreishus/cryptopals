@@ -27,6 +27,10 @@ or CBC, tells you which one is happening.
 """
 
 from random import randint
+from shared import (
+    ecb_encrypt,
+    cbc_encrypt,
+)
 
 
 def random_aes_key():
@@ -50,21 +54,20 @@ def encryption_oracle(bytes_in):
     pad_after = random_bytes(randint(5, 10))
     source_bytes = pad_before + bytes_in + pad_after
 
+    key = random_aes_key()
+
     # 50%/50% split between ECB and CBC
     if randint(1, 2) == 1:
         # ECB
-        print("ECB")
+        return ecb_encrypt(source_bytes, key)
     else:
         # CBC
-        print("CBC")
-    return source_bytes
+        iv = random_aes_key()
+        return cbc_encrypt(source_bytes, key, iv)
 
 
 def main():
-    print("hi")
-    key = random_aes_key()
-    print(key)
-    source_bytes = b"Hello"
+    source_bytes = b"Hello, this is a test sentence. How am I supposed to detect the encryption mode?"
     print(encryption_oracle(source_bytes))
 
 
