@@ -2,6 +2,23 @@
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import unpad
 
+##########
+# Chall 11
+##########
+
+
+def random_aes_key():
+    """Generate 16 random bytes"""
+    return random_bytes(16)
+
+
+def random_bytes(num):
+    key = b""
+    for i in range(num):
+        num = randint(0, 255)
+        key += num.to_bytes(1, "big")
+    return key
+
 
 ##########
 # Chall 10

@@ -31,20 +31,9 @@ from random import randint
 from shared import (
     ecb_encrypt,
     cbc_encrypt,
+    random_aes_key,
+    random_bytes,
 )
-
-
-def random_aes_key():
-    """Generate 16 random bytes"""
-    return random_bytes(16)
-
-
-def random_bytes(num):
-    key = b""
-    for i in range(num):
-        num = randint(0, 255)
-        key += num.to_bytes(1, "big")
-    return key
 
 
 def encryption_oracle(bytes_in):
@@ -83,6 +72,17 @@ def repeated_blocks(source_bytes):
     return repeats
 
 
+def detect_encryption_mode(black_box):
+    """Given a black_box bytes -> bytes function, detect if it
+    uses ECB or CBC"""
+    bytes_in = b"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    bytes_out = black_box(bytes_in)
+    repeats = repeated_blocks(bytes_out)
+    if repeats > 0:
+        return "ecb"
+    return "cbc"
+
+
 def main():
     source_bytes = b"Hello, this is a test sentence. How am I supposed to detect the encryption mode? Wait, I am allowed to choose the input to the oracle, so I will create a repeated string and look for repeated blocks ...................................................................................."
     cypher_bytes = encryption_oracle(source_bytes)
@@ -92,6 +92,11 @@ def main():
         print(f"Found {repeats} repeated blocks, this is probably ECB...")
     else:
         print("Found no repeated blocks, this is probably CBC...")
+    # If we can't choose the input text, would this be doable?
+    # Let's extract this to a function
+    print("--")
+    for _ in range(5):
+        print(detect_encryption_mode(encryption_oracle))
 
 
 if __name__ == "__main__":
