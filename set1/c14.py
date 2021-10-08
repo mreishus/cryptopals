@@ -19,8 +19,10 @@ Think "STIMULUS" and "RESPONSE".
 
 import base64
 from random import randint
+from collections import defaultdict
 from shared import (
     cbc_encrypt,
+    chunks,
     detect_encryption_mode,
     ecb_encrypt,
     random_aes_key,
@@ -62,10 +64,11 @@ def encryption_oracle_14(bytes_in):
     return ecb_encrypt(source_bytes, key)
 
 
-def last_byte_ecb_attack(blackbox, bs, goff):
+def last_byte_ecb_attack(blackbox, bs, goff, start_looking):
     # arg1: blackbox: Bytes -> Bytes function
     # arg2: bs: Int (blocksize)
     # arg3: goff: Int (Global offset)
+    # arg4: start_looking: Int (Another.. offset.. thingie..)
 
     # Knowing block size, craft input block that is one byte short
     #   - What does the function put in the last byte position?
@@ -107,8 +110,10 @@ def last_byte_ecb_attack(blackbox, bs, goff):
                 # print(f"cipher[{cipher}]")
                 # print(f"plain[{plain}]")
                 if (
-                    cipher[0 + offset : bs + offset]
-                    == target_cipher_bytes[0 + offset : bs + offset]
+                    cipher[0 + offset + start_looking : bs + offset + start_looking]
+                    == target_cipher_bytes[
+                        0 + offset + start_looking : bs + offset + start_looking
+                    ]
                 ):
                     found = True
                     decoded += byte
@@ -133,6 +138,10 @@ def main():
     print("---> Block size")
     bs = None  # Block Size
     offset = None  # Offset
+    start_looking = None  # This is.. another.. offset like variable but.. different?
+    # ^ I have 3 different "offset" type variables, 2 here, and
+    # 1 more in my last_byte_ecb_attack() function. Hopefully there is
+    # some vocabulary I don't know yet to describe these concepts I'm using.
     for i in range(100):
         pads = b"A" * i
         cipher_bytes = encryption_oracle_14(pads)
@@ -160,8 +169,25 @@ def main():
                     offset = j
                 else:
                     break
+
+            # print(f"We have block_size={bs} offset={offset} But what is start_looking?")
+            pads = (b"A" * offset) + (b"B" * (bs * 2))
+            cipher_bytes = encryption_oracle_14(pads)
+
+            # Find the contents of the repeated block
+            seen = defaultdict(int)
+            repeated_block = None
+            for block in chunks(cipher_bytes, 16):
+                seen[block] += 1
+                if seen[block] > 1:
+                    repeated_block = block
+                    break
+            # How far do we go down the cipher text to see the repeated block?
+            start_looking = cipher_bytes.find(repeated_block)
             break
-    print(f"Done! We found block_size={bs} and offset={offset}")
+    print(
+        f"Done! We found block_size={bs}, offset={offset} and start_looking={start_looking}"
+    )
 
     # AAAqwertyuiop
     # ----++++====
@@ -181,7 +207,7 @@ def main():
     # ----++++====
 
     print(f"---> Last byte analysis [blocksize: {bs}] [offset: {offset}]")
-    decoded = last_byte_ecb_attack(encryption_oracle_14, bs, offset)
+    decoded = last_byte_ecb_attack(encryption_oracle_14, bs, offset, start_looking)
     print(decoded)
 
 
