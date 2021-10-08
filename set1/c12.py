@@ -32,12 +32,7 @@ def encryption_oracle_12(bytes_in):
         encryption_oracle_12.key = random_aes_key()
 
     ## Append special string from exercise
-    # Spoiler!
-    # I don't want to debug and see what this is until I finish working code.
-    # special_string = b"Um9sbGluJyBpbiBteSA1LjAKV2l0aCBteSByYWctdG9wIGRvd24gc28gbXkgaGFpciBjYW4gYmxvdwpUaGUgZ2lybGllcyBvbiBzdGFuZGJ5IHdhdmluZyBqdXN0IHRvIHNheSBoaQpEaWQgeW91IHN0b3A/IE5vLCBJIGp1c3QgZHJvdmUgYnkK"
-
-    # Let's try my own, so I can debug without spoiling:
-    special_string = b"VGhpcyBpcyBhIHRlc3Qgb2YgYSBsb25nZXIgcGhyYXNlIHRoYXQgd2lsbCBzcGFuIG11bHRpcGxlIGJsb2Nrcy4="
+    special_string = b"Um9sbGluJyBpbiBteSA1LjAKV2l0aCBteSByYWctdG9wIGRvd24gc28gbXkgaGFpciBjYW4gYmxvdwpUaGUgZ2lybGllcyBvbiBzdGFuZGJ5IHdhdmluZyBqdXN0IHRvIHNheSBoaQpEaWQgeW91IHN0b3A/IE5vLCBJIGp1c3QgZHJvdmUgYnkK"
     special_bytes = base64.b64decode(special_string)
 
     source_bytes = bytes_in + special_bytes
@@ -45,6 +40,60 @@ def encryption_oracle_12(bytes_in):
     # Always use ECB
     key = encryption_oracle_12.key
     return ecb_encrypt(source_bytes, key)
+
+
+def last_byte_ecb_attack(blackbox, bs):
+    # arg1: blackbox: Bytes -> Bytes function
+    # arg2: bs: Int (blocksize)
+
+    # Knowing block size, craft input block that is one byte short
+    #   - What does the function put in the last byte position?
+
+    # Step 0: Send 15 bytes [ Return block includes 1 unknown byte ]
+    #         Check against 15 bytes + Brute force 1 byte
+    # Step 1: Send 14 bytes [ Return block includes 2 unknown bytes ] 
+    #         Check against 14 bytes + 1 Decoded byte  + Brute force 1 byte
+    # Step 2: Send 13 bytes [ Return block includes 3 unknown bytes ] 
+    #         Check against 13 bytes + 2 Decoded bytes + Brute force 1 byte
+
+    ## After I have one block: I have 16 bytes decoded.
+    ## Step 16:
+    ## If I send 15 bytes, I get back two+ blocks.
+    ##    The first block is my 15 bytes sent + 1 decoded byte.
+    ##    The second block is the next 15 decoded bytes + 1 unknown byte.
+    ##    So I send: 15 bytes. Check the 2nd block returned, not the first.
+    ##    And I check against: (15 bytes + 16 decoded bytes)[Indexed to partial second block] + Brute Force 1 unknown byte.
+    ## Step 17:
+    ##    Send 14 bytes. Check the 2nd block returned, not the first.
+    ##    Check against: (14 bytes + 17 decoded bytes)[Indexed to partial second block] + Brute Force 1 unknown
+
+    decoded = b""
+
+    for block_num in range(999):
+        for step in range(bs):
+            partial_block = (b"Z" * (bs - (1+step)))
+            target_cipher_bytes = blackbox(partial_block)
+            offset = block_num * bs
+
+            ## Try every possible next byte
+            found = False
+            for i in range(256):
+                byte = i.to_bytes(1, "big")
+                plain = partial_block + decoded + byte
+                cipher = blackbox(plain)
+                # print(i)
+                # print(f"target[{target_cipher_bytes[0:bs]}]")
+                # print(f"cipher[{cipher}]")
+                # print(f"plain[{plain}]")
+                if cipher[0+offset:bs+offset] == target_cipher_bytes[0+offset:bs+offset]:
+                    found = True
+                    decoded += byte
+                    break
+            if not found:
+                # Could not find next byte
+                return decoded
+
+    return decoded
 
 
 def main():
@@ -90,56 +139,8 @@ def main():
     # ----++++====
 
     print(f"---> Last byte analysis [blocksize: {bs}]")
-    # Knowing block size, craft input block that is one byte short
-    #   - What does the function put in the last byte position?
-    decoded = b""
-    # Step 0: Send 15 bytes [ Return block includes 1 unknown byte ]
-    #         Check against 15 bytes + Brute force 1 byte
-    # Step 1: Send 14 bytes [ Return block includes 2 unknown bytes ] 
-    #         Check against 14 bytes + 1 Decoded byte  + Brute force 1 byte
-    # Step 2: Send 13 bytes [ Return block includes 3 unknown bytes ] 
-    #         Check against 13 bytes + 2 Decoded bytes + Brute force 1 byte
-
-    ## After I have one block: I have 16 bytes decoded.
-    ## Step 16:
-    ## If I send 15 bytes, I get back two+ blocks.
-    ##    The first block is my 15 bytes sent + 1 decoded byte.
-    ##    The second block is the next 15 decoded bytes + 1 unknown byte.
-    ##    So I send: 15 bytes. Check the 2nd block returned, not the first.
-    ##    And I check against: (15 bytes + 16 decoded bytes)[Indexed to partial second block] + Brute Force 1 unknown byte.
-    ## Step 17:
-    ##    Send 14 bytes. Check the 2nd block returned, not the first.
-    ##    Check against: (14 bytes + 17 decoded bytes)[Indexed to partial second block] + Brute Force 1 unknown
-
-    for block_num in range(999):
-        for step in range(16):
-            partial_block = (b"Z" * (bs - (1+step)))
-            target_cipher_bytes = encryption_oracle_12(partial_block)
-            offset = block_num * bs
-
-            ## Try every possible next byte
-            found = False
-            for i in range(256):
-                byte = i.to_bytes(1, "big")
-                plain = partial_block + decoded + byte
-                cipher = encryption_oracle_12(plain)
-                # print(i)
-                # print(f"target[{target_cipher_bytes[0:bs]}]")
-                # print(f"cipher[{cipher}]")
-                # print(f"plain[{plain}]")
-                if cipher[0+offset:bs+offset] == target_cipher_bytes[0+offset:bs+offset]:
-                    found = True
-                    decoded += byte
-                    break
-            if not found:
-                print("Could not find next.")
-                print("Decoded: ")
-                print(decoded)
-                exit()
-
-    print("Decoded: ")
+    decoded = last_byte_ecb_attack(encryption_oracle_12, bs)
     print(decoded)
-    print(len(decoded))
 
 
 if __name__ == "__main__":
