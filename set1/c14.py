@@ -32,6 +32,7 @@ from shared import (
 def random_prefix():
     if not hasattr(random_prefix, "key"):
         c = randint(0, 100)
+        print(f"ssh, it's a secret. Our prefix is this many bytes long: {c}")
         random_prefix.key = random_bytes(c)
     return random_prefix.key
 
@@ -125,7 +126,8 @@ def main():
 
     # Determine Block Size
     print("---> Block size")
-    bs = None
+    bs = None  # Block Size
+    offset = None  # Offset
     for i in range(100):
         pads = b"A" * i
         cipher_bytes = encryption_oracle_14(pads)
@@ -135,9 +137,26 @@ def main():
                 f"We found the first set of repeats when sending {i} A characters in a row."
             )
             print(f"Therefore, the block size is half of that, or {i // 2} bytes.")
+            print("Or at least, it would be, if the oracle inserted 0 prefix bytes.")
+            print(
+                "Let's try some other strings like AABBBBBBBB to resolve our alignment problems and potentially narrow down the block size."
+            )
             print("")
-            bs = i // 2
+            # bs = i // 2
+            for j in range(i - 1):
+                if (i - j) % 2 == 1:
+                    continue
+                pads = (b"A" * j) + (b"B" * (i - j))
+                cipher_bytes = encryption_oracle_14(pads)
+                repeats = repeated_blocks(cipher_bytes)
+                print(f"PrePad={j} 2Block={i-j} Total={i-j+j} repeats={repeats}")
+                if repeats > 0:
+                    bs = (i - j) // 2
+                    offset = j
+                else:
+                    break
             break
+    print(f"Done! We found block_size={bs} and offset={offset}")
 
     # AAAqwertyuiop
     # ----++++====
