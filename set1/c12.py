@@ -73,9 +73,21 @@ def main():
             break
 
     # AAAqwertyuiop
-    # ----
-    # AAqw
-    # ----
+    # ----++++====
+    # AAqwertyuiop
+    # ----++++====
+    # Aqwertyuiop
+    # ----++++====
+    # qwertyuiop
+    # ----++++====
+    # KNOWN: qwer
+    # Now I need to get "t" in an unknown position. So 
+    # I go back to:
+    # AAAqwertyuiop
+    # ----++++====
+    # KNOWN: qwert
+    # AAqwertyuiop
+    # ----++++====
 
     print(f"---> Last byte analysis [blocksize: {bs}]")
     # Knowing block size, craft input block that is one byte short
@@ -87,26 +99,47 @@ def main():
     #         Check against 14 bytes + 1 Decoded byte  + Brute force 1 byte
     # Step 2: Send 13 bytes [ Return block includes 3 unknown bytes ] 
     #         Check against 13 bytes + 2 Decoded bytes + Brute force 1 byte
-    for step in range(16):
-        partial_block = (b"Z" * (bs - (1+step)))
-        target_cipher_bytes = encryption_oracle_12(partial_block)
 
-        ## Try every possible next byte
-        for i in range(256):
-            byte = i.to_bytes(1, "big")
-            plain = partial_block + decoded + byte
-            cipher = encryption_oracle_12(plain)
-            # print(i)
-            # print(f"target[{target_cipher_bytes[0:bs]}]")
-            # print(f"cipher[{cipher}]")
-            # print(f"plain[{plain}]")
-            if cipher[0:bs] == target_cipher_bytes[0:bs]:
-                print(plain)
-                print(f"Found it! The next byte = {i}")
-                decoded += byte
-                break
+    ## After I have one block: I have 16 bytes decoded.
+    ## Step 16:
+    ## If I send 15 bytes, I get back two+ blocks.
+    ##    The first block is my 15 bytes sent + 1 decoded byte.
+    ##    The second block is the next 15 decoded bytes + 1 unknown byte.
+    ##    So I send: 15 bytes. Check the 2nd block returned, not the first.
+    ##    And I check against: (15 bytes + 16 decoded bytes)[Indexed to partial second block] + Brute Force 1 unknown byte.
+    ## Step 17:
+    ##    Send 14 bytes. Check the 2nd block returned, not the first.
+    ##    Check against: (14 bytes + 17 decoded bytes)[Indexed to partial second block] + Brute Force 1 unknown
+
+    for block_num in range(999):
+        for step in range(16):
+            partial_block = (b"Z" * (bs - (1+step)))
+            target_cipher_bytes = encryption_oracle_12(partial_block)
+            offset = block_num * bs
+
+            ## Try every possible next byte
+            found = False
+            for i in range(256):
+                byte = i.to_bytes(1, "big")
+                plain = partial_block + decoded + byte
+                cipher = encryption_oracle_12(plain)
+                # print(i)
+                # print(f"target[{target_cipher_bytes[0:bs]}]")
+                # print(f"cipher[{cipher}]")
+                # print(f"plain[{plain}]")
+                if cipher[0+offset:bs+offset] == target_cipher_bytes[0+offset:bs+offset]:
+                    found = True
+                    decoded += byte
+                    break
+            if not found:
+                print("Could not find next.")
+                print("Decoded: ")
+                print(decoded)
+                exit()
+
     print("Decoded: ")
     print(decoded)
+    print(len(decoded))
 
 
 if __name__ == "__main__":
