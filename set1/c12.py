@@ -51,9 +51,9 @@ def last_byte_ecb_attack(blackbox, bs):
 
     # Step 0: Send 15 bytes [ Return block includes 1 unknown byte ]
     #         Check against 15 bytes + Brute force 1 byte
-    # Step 1: Send 14 bytes [ Return block includes 2 unknown bytes ] 
+    # Step 1: Send 14 bytes [ Return block includes 2 unknown bytes ]
     #         Check against 14 bytes + 1 Decoded byte  + Brute force 1 byte
-    # Step 2: Send 13 bytes [ Return block includes 3 unknown bytes ] 
+    # Step 2: Send 13 bytes [ Return block includes 3 unknown bytes ]
     #         Check against 13 bytes + 2 Decoded bytes + Brute force 1 byte
 
     ## After I have one block: I have 16 bytes decoded.
@@ -71,7 +71,7 @@ def last_byte_ecb_attack(blackbox, bs):
 
     for block_num in range(999):
         for step in range(bs):
-            partial_block = (b"Z" * (bs - (1+step)))
+            partial_block = b"Z" * (bs - (1 + step))
             target_cipher_bytes = blackbox(partial_block)
             offset = block_num * bs
 
@@ -85,7 +85,10 @@ def last_byte_ecb_attack(blackbox, bs):
                 # print(f"target[{target_cipher_bytes[0:bs]}]")
                 # print(f"cipher[{cipher}]")
                 # print(f"plain[{plain}]")
-                if cipher[0+offset:bs+offset] == target_cipher_bytes[0+offset:bs+offset]:
+                if (
+                    cipher[0 + offset : bs + offset]
+                    == target_cipher_bytes[0 + offset : bs + offset]
+                ):
                     found = True
                     decoded += byte
                     break
@@ -130,7 +133,7 @@ def main():
     # qwertyuiop
     # ----++++====
     # KNOWN: qwer
-    # Now I need to get "t" in an unknown position. So 
+    # Now I need to get "t" in an unknown position. So
     # I go back to:
     # AAAqwertyuiop
     # ----++++====
