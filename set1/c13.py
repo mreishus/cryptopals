@@ -45,7 +45,15 @@ Using only the user input to profile_for() (as an oracle to generate "valid"
 ciphertexts) and the ciphertexts themselves, make a role=admin profile.
 """
 
-from shared import random_aes_key, ecb_encrypt, ecb_decrypt
+from collections import defaultdict
+from shared import (
+    random_aes_key,
+    ecb_encrypt,
+    ecb_decrypt,
+    repeated_blocks,
+    pkcs7_pad,
+    chunks,
+)
 
 
 def parse_query(str_in):
@@ -123,16 +131,79 @@ def attack(blackbox):
     ## role=admin profile.
     ## I'm only allowed to use blackbox() + my input, and the ciphertexts
     ## that return from that.
-    b1 = blackbox("user@example.com")
-    print(b1)
-    b2 = blackbox("user@example.com.......")
-    print(b2)
-    return b1
+
+    ## We need to find offset/alignment
+    ## How many character we add until we start writing fresh blocks
+    first_repeat_length = None
+    for i in range(64):
+        pad = "." * i
+        ct = blackbox(pad)
+        repeat = repeated_blocks(ct)
+        if repeat > 1:
+            print(f"Length {i} = repeats {repeat}")
+            first_repeat_length = i
+            break
+    bs = 16
+    off = first_repeat_length - (bs * 2)
+    ## After OFF bytes in our email, we start writing fresh blocks
+    print(f"Found offset: {off} bytes")
+    testme = ("A" * off) + ("B" * (bs * 2))
+    ct = blackbox(testme)
+    print(f"{testme} = {ct}")
+    print(f"Repeats: {repeated_blocks(ct)}")
+
+    ## Find a block representing "user............", aka, user at end of string
+    user_role = "user".encode("ascii")
+    padded_user_role = pkcs7_pad(user_role, bs)
+    testme_user = ("A" * off) + (padded_user_role.decode("ascii") * 2)
+    ct_user = blackbox(testme_user)
+    ## The repeated block in CT_USER will be "user............"
+    seen = defaultdict(int)
+    for block in chunks(ct_user, bs):
+        seen[block] += 1
+    user_block = None
+    for block, count in seen.items():
+        if count > 1:
+            user_block = block
+    assert user_block is not None
+    print(f"Found user_block: {user_block}")
+
+    ## Find a block representing "admin...........", aka, admin at end of string
+    admin_role = "admin".encode("ascii")
+    padded_admin_role = pkcs7_pad(admin_role, bs)
+    testme_admin = ("A" * off) + (padded_admin_role.decode("ascii") * 2)
+    ct_admin = blackbox(testme_admin)
+    ## The repeated block in CT_ADMIN will be "admin..........."
+    seen = defaultdict(int)
+    for block in chunks(ct_admin, bs):
+        seen[block] += 1
+    admin_block = None
+    for block, count in seen.items():
+        if count > 1:
+            admin_block = block
+    assert admin_block is not None
+    print(f"Found admin_block: {admin_block}")
+
+    print("We need to find which email will give us a user_block aligned at the end.")
+    ct = None
+    for email_size in range(32):
+        email = ("A" * email_size) + "@example.com"
+        ct = blackbox(email)
+        print(email)
+        print(ct)
+        if user_block in ct:
+            print(f"Found it! email={email}")
+            break
+    print(ct)
+    ct_admin = ct.replace(user_block, admin_block)
+    return ct_admin
 
 
 def main():
-    print("c13")
+    print("Challenge 13")
     xyz = attack(encrypted_profile_for)
+    print("")
+    print("The attacker returned encrypted bytes. When I decrypt it, I get:")
     print(decrypt_profile(xyz))
 
 
