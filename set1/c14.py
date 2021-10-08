@@ -34,8 +34,6 @@ from shared import (
 def random_prefix():
     if not hasattr(random_prefix, "key"):
         c = randint(0, 100)
-        # TEMP: Make the random prefix always 16 bytes long, then try to solve that
-        c = 16
         print(
             f"ssh, it's a secret. Our prefix is this many bytes long: {c}. Mod 16, that's: {c % 16}"
         )
@@ -91,12 +89,13 @@ def last_byte_ecb_attack(blackbox, bs, goff, start_looking):
     ##    Send 14 bytes. Check the 2nd block returned, not the first.
     ##    Check against: (14 bytes + 17 decoded bytes)[Indexed to partial second block] + Brute Force 1 unknown
 
+    begin_pad = b"Z" * goff
     decoded = b""
 
     for block_num in range(999):
         for step in range(bs):
             partial_block = b"Z" * (bs - (1 + step))
-            target_cipher_bytes = blackbox(partial_block)
+            target_cipher_bytes = blackbox(begin_pad + partial_block)
             offset = block_num * bs
 
             ## Try every possible next byte
@@ -104,7 +103,7 @@ def last_byte_ecb_attack(blackbox, bs, goff, start_looking):
             for i in range(256):
                 byte = i.to_bytes(1, "big")
                 plain = partial_block + decoded + byte
-                cipher = blackbox(plain)
+                cipher = blackbox(begin_pad + plain)
                 # print(i)
                 # print(f"target[{target_cipher_bytes[0:bs]}]")
                 # print(f"cipher[{cipher}]")
