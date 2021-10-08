@@ -32,7 +32,11 @@ from shared import (
 def random_prefix():
     if not hasattr(random_prefix, "key"):
         c = randint(0, 100)
-        print(f"ssh, it's a secret. Our prefix is this many bytes long: {c}")
+        # TEMP: Make the random prefix always 16 bytes long, then try to solve that
+        c = 16
+        print(
+            f"ssh, it's a secret. Our prefix is this many bytes long: {c}. Mod 16, that's: {c % 16}"
+        )
         random_prefix.key = random_bytes(c)
     return random_prefix.key
 
@@ -58,9 +62,10 @@ def encryption_oracle_14(bytes_in):
     return ecb_encrypt(source_bytes, key)
 
 
-def last_byte_ecb_attack(blackbox, bs):
+def last_byte_ecb_attack(blackbox, bs, goff):
     # arg1: blackbox: Bytes -> Bytes function
     # arg2: bs: Int (blocksize)
+    # arg3: goff: Int (Global offset)
 
     # Knowing block size, craft input block that is one byte short
     #   - What does the function put in the last byte position?
@@ -175,8 +180,8 @@ def main():
     # AAqwertyuiop
     # ----++++====
 
-    print(f"---> Last byte analysis [blocksize: {bs}]")
-    decoded = last_byte_ecb_attack(encryption_oracle_14, bs)
+    print(f"---> Last byte analysis [blocksize: {bs}] [offset: {offset}]")
+    decoded = last_byte_ecb_attack(encryption_oracle_14, bs, offset)
     print(decoded)
 
 
