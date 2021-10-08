@@ -32,7 +32,12 @@ def encryption_oracle_12(bytes_in):
         encryption_oracle_12.key = random_aes_key()
 
     ## Append special string from exercise
-    special_string = b"Um9sbGluJyBpbiBteSA1LjAKV2l0aCBteSByYWctdG9wIGRvd24gc28gbXkgaGFpciBjYW4gYmxvdwpUaGUgZ2lybGllcyBvbiBzdGFuZGJ5IHdhdmluZyBqdXN0IHRvIHNheSBoaQpEaWQgeW91IHN0b3A/IE5vLCBJIGp1c3QgZHJvdmUgYnkK"
+    # Spoiler!
+    # I don't want to debug and see what this is until I finish working code.
+    # special_string = b"Um9sbGluJyBpbiBteSA1LjAKV2l0aCBteSByYWctdG9wIGRvd24gc28gbXkgaGFpciBjYW4gYmxvdwpUaGUgZ2lybGllcyBvbiBzdGFuZGJ5IHdhdmluZyBqdXN0IHRvIHNheSBoaQpEaWQgeW91IHN0b3A/IE5vLCBJIGp1c3QgZHJvdmUgYnkK"
+
+    # Let's try my own, so I can debug without spoiling:
+    special_string = b"VGhpcyBpcyBhIHRlc3Qgb2YgYSBsb25nZXIgcGhyYXNlIHRoYXQgd2lsbCBzcGFuIG11bHRpcGxlIGJsb2Nrcy4="
     special_bytes = base64.b64decode(special_string)
 
     source_bytes = bytes_in + special_bytes
@@ -44,10 +49,6 @@ def encryption_oracle_12(bytes_in):
 
 def main():
     print("c12")
-    # print(encryption_oracle_12(b"A"))
-    # print(encryption_oracle_12(b"AA"))
-    # print(encryption_oracle_12(b"AAA"))
-    # print(encryption_oracle_12(b"AAAA"))
 
     # Detect that ECB is being used
     mode = detect_encryption_mode(encryption_oracle_12)
@@ -71,16 +72,41 @@ def main():
             bs = i // 2
             break
 
+    # AAAqwertyuiop
+    # ----
+    # AAqw
+    # ----
+
     print(f"---> Last byte analysis [blocksize: {bs}]")
-    print(f"Sending {bs} As.. ")
-    cipher_bytes = encryption_oracle_12(b"A" * bs)
-    print(cipher_bytes)
-    print("")
-    print(f"Sending {bs - 1} As.. ")
-    cipher_bytes = encryption_oracle_12(b"A" * (bs - 1))
-    print(cipher_bytes)
     # Knowing block size, craft input block that is one byte short
     #   - What does the function put in the last byte position?
+    decoded = b""
+    # Step 0: Send 15 bytes [ Return block includes 1 unknown byte ]
+    #         Check against 15 bytes + Brute force 1 byte
+    # Step 1: Send 14 bytes [ Return block includes 2 unknown bytes ] 
+    #         Check against 14 bytes + 1 Decoded byte  + Brute force 1 byte
+    # Step 2: Send 13 bytes [ Return block includes 3 unknown bytes ] 
+    #         Check against 13 bytes + 2 Decoded bytes + Brute force 1 byte
+    for step in range(16):
+        partial_block = (b"Z" * (bs - (1+step)))
+        target_cipher_bytes = encryption_oracle_12(partial_block)
+
+        ## Try every possible next byte
+        for i in range(256):
+            byte = i.to_bytes(1, "big")
+            plain = partial_block + decoded + byte
+            cipher = encryption_oracle_12(plain)
+            # print(i)
+            # print(f"target[{target_cipher_bytes[0:bs]}]")
+            # print(f"cipher[{cipher}]")
+            # print(f"plain[{plain}]")
+            if cipher[0:bs] == target_cipher_bytes[0:bs]:
+                print(plain)
+                print(f"Found it! The next byte = {i}")
+                decoded += byte
+                break
+    print("Decoded: ")
+    print(decoded)
 
 
 if __name__ == "__main__":
