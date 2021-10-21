@@ -3,6 +3,23 @@ from Crypto.Cipher import AES
 from Crypto.Util.Padding import unpad
 from random import randint
 from collections import defaultdict
+import sys
+
+def is_pkcs7_pad_valid(bytes_in, block_size):
+    """
+    """
+    exception_msg = "Invalid padding"
+    if block_size >= 256:
+        raise ValueError("pkcs7_pad: Block size must be below 256")
+    if (len(bytes_in) % block_size) > 1:
+        raise Exception(exception_msg)
+    last_byte = bytes_in[-1]
+    if last_byte < block_size:
+        # if last_byte=4, check -1 -2 -3 -4
+        for i in range(-1, -1 - last_byte, -1):
+            if bytes_in[i] != last_byte:
+                raise Exception(exception_msg)
+    return True
 
 ##########
 # Chall 11

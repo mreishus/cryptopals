@@ -125,7 +125,7 @@ def last_byte_ecb_attack(blackbox, bs, goff, start_looking):
 
 
 def main():
-    print("c12")
+    print("c14")
 
     # Detect that ECB is being used
     mode = detect_encryption_mode(encryption_oracle_14)
