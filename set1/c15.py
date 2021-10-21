@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from shared import pkcs7_pad, is_pkcs7_pad_valid
+from shared import pkcs7_pad, pkcs7_unpad
 
 def main():
     print("c15")
@@ -7,15 +7,15 @@ def main():
     padded_valid2 = b"ICE ICE BABY\x04\x04\x04\x04"
     padded_invalid1 = b"ICE ICE BABY\x05\x05\x05\x05"
     padded_invalid2 = b"ICE ICE BABY\x01\x02\x03\x04"
-    z = is_pkcs7_pad_valid(padded_valid1, 16)
+    z = pkcs7_unpad(padded_valid1, 16)
     print(z)
-    z = is_pkcs7_pad_valid(padded_valid2, 16)
+    z = pkcs7_unpad(padded_valid2, 16)
     print(z)
-    z = is_pkcs7_pad_valid(padded_invalid1, 16)
+    print("Expect to see: Exceptions")
+    z = pkcs7_unpad(padded_invalid1, 16)
     print(z)
-    z = is_pkcs7_pad_valid(padded_invalid2, 16)
+    z = pkcs7_unpad(padded_invalid2, 16)
     print(z)
-    # z = is_pkcs7_pad_valid(padded_invalid1, 16)
 
 if __name__ == "__main__":
     main()
