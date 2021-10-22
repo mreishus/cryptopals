@@ -17,7 +17,8 @@ def get_rand_string():
         b"MDAwMDA5aXRoIG15IHJhZy10b3AgZG93biBzbyBteSBoYWlyIGNhbiBibG93",
     ]
     random_i = random.randrange(len(strings))
-    # return b"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    return b"YELLOW SUBMARINEYELLOW SUBMARINEYELLOW SUBMARINEYELLOW SUBMARINE"
+    return b"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
     return strings[random_i]
 
 
@@ -42,7 +43,7 @@ def f2(ct, iv):
     check its padding, and return true or false depending on whether the
     padding is valid."""
     pt = cbc_decrypt(ct, mykey(), iv)
-    # print(f"      ---> shh: decrypted to [{pt}]")
+    # print(f"      ---> shh: decrypted to [{pt[-17:]}]")
     try:
         pt = pkcs7_unpad(pt, 16)
     except Exception:
@@ -63,7 +64,6 @@ def main():
     pt = f2(ct, iv)
     print(pt)
 
-    mod_ct = bytearray(ct)
     # 5 blocks: ct 0-79. To edit last char, change [63] or [-17] or [79 - 16]
     # 4 blocks: ct 0-63. To edit last char, change [47] or [-17] or [63 - 16]
     # 3 blocks: ct 0-47. To edit last char, change [31] or [-17] or [47 - 16]
@@ -75,31 +75,51 @@ def main():
     #     print(f"{i} {mod_ct[i]}")
     # print(f"Len = {len(mod_ct)}")
 
-    answer = bytearray(len(mod_ct))
+    mod_ct = bytearray(ct)
+    answer = bytearray(len(ct))
 
     # guess_index = len(mod_ct) - 1
-    for guess_index in range(len(mod_ct) - 1, -1, -1):
+    for guess_index in range(len(ct) - 1, -1, -1):
+        found_guess = False
         modify_index = guess_index - 16
         target_pad = 16 - (guess_index % 16)
-        if guess_index <= 40:
+
+        # If we're guessing stuff in the second to last block, we no longer need the last block
+        distance = len(ct) - guess_index
+        blocks_to_discard = (distance - 1) // 16
+
+        print(f"GUESS INDEX: [{guess_index}] MODIFY INDEX: [{modify_index}] || Target Pad [{target_pad}] || Blocks to discard [{blocks_to_discard}] ")
+        if modify_index < 0:
             break
-        print(f"GUESS INDEX: [{guess_index}] MODIFY INDEX: [{modify_index}] || Target Pad [{target_pad}]")
 
         for guess in range(256):
             if guess == 1:
                 continue
             mod_ct = bytearray(ct)
+            # print(f"Changing {modify_index}")
             mod_ct[modify_index] ^= guess ^ target_pad
             for j in range(target_pad):
                 if j == 0:
                     continue
+                # print(f"Changing {modify_index + j}")
                 mod_ct[modify_index + j] ^= answer[guess_index + j] ^ target_pad
+
+            # print("Mod ct before discarding: ", len(mod_ct))
+            if (blocks_to_discard > 0):
+                for i in range(blocks_to_discard):
+                    mod_ct = mod_ct[0:-16]
+                # print("Mod ct after discarding: ", len(mod_ct))
+
             valid_padding = f2(mod_ct, iv)
             # print(f"{guess} {valid_padding}")
             if valid_padding:
                 print(f"Guess is: {guess}")
                 answer[guess_index] = guess
+                found_guess = True
                 break
+        if not found_guess:
+            print("Could not find guess..")
+            break
     print(answer)
 
 
