@@ -14,6 +14,10 @@ def pkcs7_unpad(bytes_in, block_size):
     if (len(bytes_in) % block_size) > 1:
         raise Exception(exception_msg)
     last_byte = bytes_in[-1]
+    if last_byte == 0:
+        raise Exception(exception_msg)
+    if last_byte >= block_size:
+        raise Exception(exception_msg)
     if last_byte < block_size:
         # if last_byte=4, check -1 -2 -3 -4
         for i in range(-1, -1 - last_byte, -1):
