@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import random
 from shared import pkcs7_pad, pkcs7_unpad, random_aes_key, cbc_encrypt, cbc_decrypt
+import base64
 
 
 def get_rand_string():
@@ -17,8 +18,7 @@ def get_rand_string():
         b"MDAwMDA5aXRoIG15IHJhZy10b3AgZG93biBzbyBteSBoYWlyIGNhbiBibG93",
     ]
     random_i = random.randrange(len(strings))
-    return b"YELLOW SUBMARINEYELLOW SUBMARINEYELLOW SUBMARINEYELLOW SUBMARINE"
-    return b"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    return base64.b64decode(strings[random_i])
     return strings[random_i]
 
 
@@ -89,20 +89,26 @@ def main():
         blocks_to_discard = (distance - 1) // 16
 
         print(f"GUESS INDEX: [{guess_index}] MODIFY INDEX: [{modify_index}] || Target Pad [{target_pad}] || Blocks to discard [{blocks_to_discard}] ")
-        if modify_index < 0:
-            break
 
         for guess in range(256):
             if guess == 1:
                 continue
             mod_ct = bytearray(ct)
+            mod_iv = bytearray(iv)
             # print(f"Changing {modify_index}")
-            mod_ct[modify_index] ^= guess ^ target_pad
+            if modify_index >= 0:
+                mod_ct[modify_index] ^= guess ^ target_pad
+            else:
+                mod_iv[modify_index] ^= guess ^ target_pad
+
             for j in range(target_pad):
                 if j == 0:
                     continue
                 # print(f"Changing {modify_index + j}")
-                mod_ct[modify_index + j] ^= answer[guess_index + j] ^ target_pad
+                if modify_index + j >= 0:
+                    mod_ct[modify_index + j] ^= answer[guess_index + j] ^ target_pad
+                else:
+                    mod_iv[modify_index + j] ^= answer[guess_index + j] ^ target_pad
 
             # print("Mod ct before discarding: ", len(mod_ct))
             if (blocks_to_discard > 0):
@@ -110,7 +116,7 @@ def main():
                     mod_ct = mod_ct[0:-16]
                 # print("Mod ct after discarding: ", len(mod_ct))
 
-            valid_padding = f2(mod_ct, iv)
+            valid_padding = f2(mod_ct, mod_iv)
             # print(f"{guess} {valid_padding}")
             if valid_padding:
                 print(f"Guess is: {guess}")
@@ -121,12 +127,6 @@ def main():
             print("Could not find guess..")
             break
     print(answer)
-
-
-    print("")
-    print("[Modified] Is the padding valid?")
-    ct = bytes(mod_ct)
-    print(pt)
 
 
 if __name__ == "__main__":
