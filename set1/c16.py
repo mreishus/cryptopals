@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from shared import pkcs7_pad, pkcs7_unpad, random_aes_key, cbc_encrypt, cbc_decrypt
+from shared import pkcs7_pad, random_aes_key, cbc_encrypt, cbc_decrypt
 
 def enc(input_bytes):
     prepend = b"comment1=cooking%20MCs;userdata="

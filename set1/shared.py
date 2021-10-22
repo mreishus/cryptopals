@@ -5,9 +5,9 @@ from random import randint
 from collections import defaultdict
 import sys
 
+
 def pkcs7_unpad(bytes_in, block_size):
-    """
-    """
+    """"""
     exception_msg = "Invalid padding"
     if block_size >= 256:
         raise ValueError("pkcs7_pad: Block size must be below 256")
@@ -20,7 +20,8 @@ def pkcs7_unpad(bytes_in, block_size):
             if bytes_in[i] != last_byte:
                 raise Exception(exception_msg)
     # Strip padding
-    return bytes_in[:0 - last_byte]
+    return bytes_in[: 0 - last_byte]
+
 
 ##########
 # Chall 11
