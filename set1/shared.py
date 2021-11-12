@@ -24,6 +24,9 @@ def ctr_crypt(plaintext_bytes, key_bytes, nonce_bytes=b"\x00" * 8):
         # Encrypt the Nonce+Coutner to make keystream
         xor_key = cipher.encrypt(nonce_counter_bytes)
 
+        # num_key = [int(z) for z in xor_key]
+        # print(num_key)
+
         # Shorten keystream if too long
         if len(xor_key) > len(block):
             xor_key = xor_key[:len(block)]

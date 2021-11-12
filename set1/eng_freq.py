@@ -58,11 +58,14 @@ def frequency_score(str_in):
         return 0
 
     total_diff = 0.0
+    sum_diff = 0.0
     for letter, ideal_freq in eng_freq_with_spaces.items():
         actual_freq = counts[letter] / len(str_in)
         this_diff = ideal_freq - actual_freq
         total_diff += this_diff * this_diff
+        sum_diff += this_diff
         # print(f"let={letter} idea={ideal_freq} act={actual_freq} diff={this_diff} total={total_diff}")
 
+    return sum_diff
     return math.sqrt(total_diff)
 
