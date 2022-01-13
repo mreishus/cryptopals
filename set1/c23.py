@@ -25,8 +25,13 @@ def untemper(y):
     # Iermed: 8903                         10001011000111
     # step4 : 2333906440 10001011000111001001011000001000
     # The first 18 digits are the same.
+    y = inverse_xor_right_shift(y, l)
+    print(f"undo1 : {y} {y:32b} ")
 
 
+
+def inverse_xor_right_shift(y, l):
+    w = 32
     output = 0
     shifted = y >> l
 
@@ -43,8 +48,9 @@ def untemper(y):
 
         output *= 2
         output += digit ^ shifted_digit
-    print(f"after : {output} {output:32b} ")
-    print(f"shifted     : {shifted} {shifted:32b} ")
+    # print(f"after : {output} {output:32b} ")
+    # print(f"shifted     : {shifted} {shifted:32b} ")
+    return output
 
 
 
