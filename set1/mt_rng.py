@@ -40,6 +40,8 @@ class MTRNG:
             self.twist()
         y = self.MT[self.index]
         print(f"before: {y} {y:32b} ")
+        print(f"Iermed: {(y >> self.u) & self.d}    {((y>>self.u) & self.d):32b}")
+        print(f"Iermed: {y >> self.u}    {(y>>self.u):32b}")
         y = y ^ ((y >> self.u) & self.d)
         print(f"step1 : {y} {y:32b}")
         y = y ^ ((y << self.s) & self.b)
