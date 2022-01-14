@@ -39,14 +39,15 @@ class MTRNG:
                 raise ValueError("Generator was never seeded")
             self.twist()
         y = self.MT[self.index]
-        # print(f"before: {y} {y:32b} ")
+        print(f"before: {y} {y:32b} ")
         y = y ^ ((y >> self.u) & self.d)
+        y = y ^ ((y << self.s) & self.b)
         y = y ^ ((y << self.t) & self.c)
         y = y ^ (y >> self.l)
 
         self.index += 1
         mask = (1 << self.w) - 1
-        # print(f"after : {(y&mask)} {(y&mask):32b}")
+        print(f"after : {(y&mask)} {(y&mask):32b}")
         return y & mask
 
     def twist(self):

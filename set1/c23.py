@@ -16,15 +16,12 @@ def untemper(y):
     (u, d) = (11, 0xFFFFFFFF) # additional Mersenne Twister tempering bit shifts/masks
     l = 18 # additional Mersenne Twister tempering bit shifts/masks
 
-    # print('--untemper--')
-    # print(f"before: {y} {y:32b} ")
     y = inverse_xor_right_shift(y, l)
     y = inverse_xor_left_shift(y, t, c)
     y = inverse_xor_left_shift(y, s, b)
     y = inverse_xor_right_shift(y, u)
-    # print(f"after : {y}    {y:32b} ")
-    return y
 
+    return y
 
 def inverse_xor_left_shift(y, shift_amount, shift_mask):
     w = 32
@@ -34,7 +31,6 @@ def inverse_xor_left_shift(y, shift_amount, shift_mask):
         # Grab the digit in the ith place of the "self.c" mask
         mask_digit = shift_mask & (1 << i)
         mask_digit = 1 if mask_digit > 0 else 0
-        xor_digit = 'dunno'
 
         y_digit = y & (1 << i)
         y_digit = 1 if y_digit > 0 else 0
@@ -43,10 +39,7 @@ def inverse_xor_left_shift(y, shift_amount, shift_mask):
             digit = y_digit
         else:
             # if 1, we need to XOR with the shifted version:
-
-            if i > ((2 * shift_amount) - 1):
-                # In some cases we need to rebuld shifted with the latest
-                # information we've already computed
+            if i > 13:
                 shifted = output << shift_amount
             xor_digit = shifted & (1 << i)
             xor_digit = 1 if xor_digit > 0 else 0
@@ -63,7 +56,6 @@ def inverse_xor_right_shift(y, l):
     # Iermed: 8903                         10001011000111
     # step4 : 2333906440 10001011000111001001011000001000
     # The first 18 digits are the same.
-
     ## undo this: y = y ^ (y >> 11)        
     ##before: 3360406328 11001000010010111011101100111000 
     ##                   |---11----||---11----|
