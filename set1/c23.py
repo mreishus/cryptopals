@@ -18,24 +18,29 @@ def untemper(y):
 
     print('--untemper--')
     print(f"before: {y} {y:32b} ")
-
-    # undo this: y = y ^ (y >> self.l)        # (self.l is 18)
-    # step3 : 2333914319 10001011000111001011010011001111
-    #                    |-----18---------||------14----|
-    # Iermed: 8903                         10001011000111
-    # step4 : 2333906440 10001011000111001001011000001000
-    # The first 18 digits are the same.
     y = inverse_xor_right_shift(y, l)
     print(f"undo1 : {y} {y:32b} ")
 
     print("goal: Turn it into 3243947215 by undoing y = y ^ ((y << self.t) & self.c)")
-    ## undo this: y = y ^ ((y << 15) & 0xEFC60000)
+    print(f"undo1 : {y} {y:32b} ")
+    y = inverse_xor_left_shift(y, t, c)
+    print(f"y     : {y}    {y:32b} ")
+    print("goal: Turn it into 3360862799 by undoing y = y ^ ((y << self.s) & self.b)")
+    y = inverse_xor_left_shift(y, s, b)
+    print(f"y     : {y}    {y:32b} ")
+    y = inverse_xor_right_shift(y, u)
+    print(f"y     : {y}    {y:32b} ")
+
+
+def inverse_xor_left_shift(y, shift_amount, shift_mask):
+    w = 32
     output = 0
-    shifted = y << 15
-    for i in range(w - 1, 0 - 1, -1):
+    shifted = y << shift_amount
+    for i in range(w):
         # Grab the digit in the ith place of the "self.c" mask
-        mask_digit = c & (1 << i)
+        mask_digit = shift_mask & (1 << i)
         mask_digit = 1 if mask_digit > 0 else 0
+        xor_digit = 'dunno'
 
         y_digit = y & (1 << i)
         y_digit = 1 if y_digit > 0 else 0
@@ -44,15 +49,26 @@ def untemper(y):
             digit = y_digit
         else:
             # if 1, we need to XOR with the shifted version:
+
+            if i > ((2 * shift_amount) - 1):
+                # In some cases we need to rebuld shifted with the latest
+                # information we've already computed
+                shifted = output << shift_amount
             xor_digit = shifted & (1 << i)
             xor_digit = 1 if xor_digit > 0 else 0
             digit = y_digit ^ xor_digit
 
-        # digit = mask_digit
-        output *= 2
-        output += digit
-    print(f"undo1 : {y} {y:32b} ")
-    print(f"output: {output}    {output:32b} ")
+        output |= digit * 2 ** i
+    return output
+
+
+def inverse_xor_right_shift(y, l):
+    # undo this: y = y ^ (y >> self.l)        # (self.l is 18)
+    # step3 : 2333914319 10001011000111001011010011001111
+    #                    |-----18---------||------14----|
+    # Iermed: 8903                         10001011000111
+    # step4 : 2333906440 10001011000111001001011000001000
+    # The first 18 digits are the same.
 
     ## undo this: y = y ^ (y >> 11)        
     ##before: 3360406328 11001000010010111011101100111000 
@@ -63,10 +79,6 @@ def untemper(y):
     ## The first 11 digits are the same.
     #y = inverse_xor_right_shift(y, 11)
     #print(f"undo2 : {y} {y:32b} ")
-
-
-
-def inverse_xor_right_shift(y, l):
     w = 32
     output = 0
     shifted = (y >> l)
