@@ -46,9 +46,19 @@ class MTRNG:
         print(f"step1 : {y} {y:32b}")
         y = y ^ ((y << self.s) & self.b)
         print(f"step2 : {y} {y:32b}")
+
+        i1 = (y << self.t)
+        i2 = self.c
+        i3 = (y << self.t) & self.c
+        print(f"shifted : {i1} {i1:32b}")
+        print(f"const   : {i2}                     {i2:32b}")
+        print(f"sANDc   : {i3}                     {i3:32b}")
+        print(f"step2 : {y}                       {y:32b}")
+
         y = y ^ ((y << self.t) & self.c)
+        print(f"step3 : {y}                       {y:32b}")
         print(f"step3 : {y} {y:32b}")
-        print(f"Iermed: {y >> self.l}       {(y>>self.l):32b}")
+        # print(f"Iermed: {y >> self.l}       {(y>>self.l):32b}")
         y = y ^ (y >> self.l)
         print(f"step4 : {y} {y:32b}")
 

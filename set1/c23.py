@@ -27,18 +27,42 @@ def untemper(y):
     # The first 18 digits are the same.
     y = inverse_xor_right_shift(y, l)
     print(f"undo1 : {y} {y:32b} ")
-    y = 3360862799
-    print(f"force : {y} {y:32b} ")
 
-    # undo this: y = y ^ (y >> 11)        
-    #before: 3360406328 11001000010010111011101100111000 
-    #                   |---11----||---11----|
-    #                              110010000100101110111
-    #      ---------------------------------------------
-    #step1 : 3360862799 11001000010100101011001001001111
-    # The first 11 digits are the same.
-    y = inverse_xor_right_shift(y, 11)
-    print(f"undo2 : {y} {y:32b} ")
+    print("goal: Turn it into 3243947215 by undoing y = y ^ ((y << self.t) & self.c)")
+    ## undo this: y = y ^ ((y << 15) & 0xEFC60000)
+    output = 0
+    shifted = y << 15
+    for i in range(w - 1, 0 - 1, -1):
+        # Grab the digit in the ith place of the "self.c" mask
+        mask_digit = c & (1 << i)
+        mask_digit = 1 if mask_digit > 0 else 0
+
+        y_digit = y & (1 << i)
+        y_digit = 1 if y_digit > 0 else 0
+        if mask_digit == 0:
+            # if 0, there's no xOR to do, let the i'th digit of Y take hold
+            digit = y_digit
+        else:
+            # if 1, we need to XOR with the shifted version:
+            xor_digit = shifted & (1 << i)
+            xor_digit = 1 if xor_digit > 0 else 0
+            digit = y_digit ^ xor_digit
+
+        # digit = mask_digit
+        output *= 2
+        output += digit
+    print(f"undo1 : {y} {y:32b} ")
+    print(f"output: {output}    {output:32b} ")
+
+    ## undo this: y = y ^ (y >> 11)        
+    ##before: 3360406328 11001000010010111011101100111000 
+    ##                   |---11----||---11----|
+    ##                              110010000100101110111
+    ##      ---------------------------------------------
+    ##step1 : 3360862799 11001000010100101011001001001111
+    ## The first 11 digits are the same.
+    #y = inverse_xor_right_shift(y, 11)
+    #print(f"undo2 : {y} {y:32b} ")
 
 
 
