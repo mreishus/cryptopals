@@ -99,11 +99,32 @@ def inverse_xor_right_shift(y, l):
 
 def main():
     r = MTRNG()
-    print('hi')
     r.seed_mt(100)
-    num = r.extract_number()
-    print(num)
-    print(untemper(num))
+
+    # Once you have "untemper" working, create a new MT19937 generator, tap it
+    # for 624 outputs, untemper each of them to recreate the state of the
+    # generator, and splice that state into a new instance of the MT19937
+    # generator. 
+    outputs_seen = []
+    print("Observing RNG..")
+    for i in range(624):
+        num = r.extract_number()
+        outputs_seen.append(num)
+
+    untempered_outputs = [untemper(x) for x in outputs_seen]
+    print("Untempering outputs...")
+    # print(outputs_seen)
+    print("Cloning RNG..")
+    cloned_r = MTRNG()
+    cloned_r.MT = untempered_outputs
+    cloned_r.index = 624
+
+    for i in range(10):
+        real_num = r.extract_number()
+        cloned_num = cloned_r.extract_number()
+        print(f"Real: {real_num} | Cloned: {cloned_num}")
+
+
 
 
 if __name__ == "__main__":
