@@ -16,20 +16,14 @@ def untemper(y):
     (u, d) = (11, 0xFFFFFFFF) # additional Mersenne Twister tempering bit shifts/masks
     l = 18 # additional Mersenne Twister tempering bit shifts/masks
 
-    print('--untemper--')
-    print(f"before: {y} {y:32b} ")
+    # print('--untemper--')
+    # print(f"before: {y} {y:32b} ")
     y = inverse_xor_right_shift(y, l)
-    print(f"undo1 : {y} {y:32b} ")
-
-    print("goal: Turn it into 3243947215 by undoing y = y ^ ((y << self.t) & self.c)")
-    print(f"undo1 : {y} {y:32b} ")
     y = inverse_xor_left_shift(y, t, c)
-    print(f"y     : {y}    {y:32b} ")
-    print("goal: Turn it into 3360862799 by undoing y = y ^ ((y << self.s) & self.b)")
     y = inverse_xor_left_shift(y, s, b)
-    print(f"y     : {y}    {y:32b} ")
     y = inverse_xor_right_shift(y, u)
-    print(f"y     : {y}    {y:32b} ")
+    # print(f"after : {y}    {y:32b} ")
+    return y
 
 
 def inverse_xor_left_shift(y, shift_amount, shift_mask):
@@ -117,7 +111,7 @@ def main():
     r.seed_mt(100)
     num = r.extract_number()
     print(num)
-    untemper(num)
+    print(untemper(num))
 
 
 if __name__ == "__main__":
