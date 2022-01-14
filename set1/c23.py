@@ -9,12 +9,13 @@ import time
 ##           0111
 ##       11010111
 
+
 def untemper(y):
-    w = 32 # word size (bits)
+    w = 32  # word size (bits)
     (s, b) = (7, 0x9D2C5680)  # TGFSR(R) Tempering bit shift + mask
-    (t, c) = (15, 0xEFC60000) # TGFSR(R) Tempering bit shift + mask
-    (u, d) = (11, 0xFFFFFFFF) # additional Mersenne Twister tempering bit shifts/masks
-    l = 18 # additional Mersenne Twister tempering bit shifts/masks
+    (t, c) = (15, 0xEFC60000)  # TGFSR(R) Tempering bit shift + mask
+    (u, d) = (11, 0xFFFFFFFF)  # additional Mersenne Twister tempering bit shifts/masks
+    l = 18  # additional Mersenne Twister tempering bit shifts/masks
 
     y = inverse_xor_right_shift(y, l)
     y = inverse_xor_left_shift(y, t, c)
@@ -22,6 +23,7 @@ def untemper(y):
     y = inverse_xor_right_shift(y, u)
 
     return y
+
 
 def inverse_xor_left_shift(y, shift_amount, shift_mask):
     w = 32
@@ -56,18 +58,18 @@ def inverse_xor_right_shift(y, l):
     # Iermed: 8903                         10001011000111
     # step4 : 2333906440 10001011000111001001011000001000
     # The first 18 digits are the same.
-    ## undo this: y = y ^ (y >> 11)        
-    ##before: 3360406328 11001000010010111011101100111000 
+    ## undo this: y = y ^ (y >> 11)
+    ##before: 3360406328 11001000010010111011101100111000
     ##                   |---11----||---11----|
     ##                              110010000100101110111
     ##      ---------------------------------------------
     ##step1 : 3360862799 11001000010100101011001001001111
     ## The first 11 digits are the same.
-    #y = inverse_xor_right_shift(y, 11)
-    #print(f"undo2 : {y} {y:32b} ")
+    # y = inverse_xor_right_shift(y, 11)
+    # print(f"undo2 : {y} {y:32b} ")
     w = 32
     output = 0
-    shifted = (y >> l)
+    shifted = y >> l
 
     # i = [31 - 14], or the first 18 digits that are unchanged
     for i in range(w - 1, (w - l) - 1, -1):
@@ -77,7 +79,7 @@ def inverse_xor_right_shift(y, l):
     # print(f"after : {output}       {output:32b} ")
     # print(f"shift : {shifted}    {shifted:32b} ")
     # i = [13 - 0], or the next 14 digits that are changed
-    for i in range((w-l) - 1, 0-1, -1):
+    for i in range((w - l) - 1, 0 - 1, -1):
         # print(i, (w - 2*l), end=" ")
         digit = (y >> i) & 1
         shifted_digit = (shifted >> i) & 1
@@ -85,8 +87,8 @@ def inverse_xor_right_shift(y, l):
         # If this is the case, we've run out of data,
         # and need to start looking in our generated output for XOR digits
         # This is really hard to understand/explain :/
-        if i < w - 2*l:
-            shifted_digit = (output >> (w - 2*l)) & 1
+        if i < w - 2 * l:
+            shifted_digit = (output >> (w - 2 * l)) & 1
         # print(f" | {shifted_digit} | {output:>42b}")
 
         output *= 2
@@ -96,7 +98,6 @@ def inverse_xor_right_shift(y, l):
     return output
 
 
-
 def main():
     r = MTRNG()
     r.seed_mt(100)
@@ -104,7 +105,7 @@ def main():
     # Once you have "untemper" working, create a new MT19937 generator, tap it
     # for 624 outputs, untemper each of them to recreate the state of the
     # generator, and splice that state into a new instance of the MT19937
-    # generator. 
+    # generator.
     outputs_seen = []
     print("Observing RNG..")
     for i in range(624):
@@ -123,8 +124,6 @@ def main():
         real_num = r.extract_number()
         cloned_num = cloned_r.extract_number()
         print(f"Real: {real_num} | Cloned: {cloned_num}")
-
-
 
 
 if __name__ == "__main__":
