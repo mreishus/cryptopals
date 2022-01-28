@@ -64,16 +64,9 @@ class RNG:
 
 def main():
     r = RNG()
-    r.seed_mt(123)
-    for i in range(10):
-        print(r.extract_number())
-    print("--")
-    r.seed_mt(234)
-    for i in range(10):
-        print(r.extract_number())
-    print("--")
-    r.seed_mt(123)
-    for i in range(10):
+    print("Generating 20 PRNG numbers with seed = 332211")
+    r.seed_mt(332211)
+    for i in range(20):
         print(r.extract_number())
 
 
