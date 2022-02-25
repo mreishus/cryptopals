@@ -3,6 +3,7 @@ from Crypto.Cipher import AES
 from Crypto.Util.Padding import unpad
 from random import randint
 from collections import defaultdict
+from itertools import islice
 import sys
 
 ##########
@@ -39,6 +40,35 @@ def ctr_crypt(plaintext_bytes, key_bytes, nonce_bytes=b"\x00" * 8):
         counter += 1
 
     return bytes(encrypted)
+
+def ctr_crypt2(plaintext_bytes, key_bytes, nonce_bytes=b"\x00" * 8):
+    """ 
+    Alternate implementation of ctr_crypt using a ctr_keystream generator 
+    Behavior is exactly the same.
+    """
+    keystream_bytes = list(islice(ctr_keystream(key_bytes, nonce_bytes), 0, len(plaintext_bytes)))
+    return hex_bytes_xor(plaintext_bytes, keystream_bytes)
+
+def ctr_keystream(key_bytes, nonce_bytes=b"\x00" * 8):
+    cipher = AES.new(key_bytes, AES.MODE_ECB)
+
+    bs = 16
+    counter = 0
+
+    while True:
+        # Generate Nonce+Counter
+        counter_bytes = counter.to_bytes(length=8, byteorder='little')
+        nonce_counter_bytes = nonce_bytes + counter_bytes
+
+        # Encrypt the Nonce+Coutner to make keystream
+        key_part = cipher.encrypt(nonce_counter_bytes)
+
+        for byte in key_part:
+            yield byte
+
+        # Inc counter
+        counter += 1
+
 
 def pkcs7_unpad(bytes_in, block_size):
     """"""
