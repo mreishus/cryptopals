@@ -113,6 +113,10 @@ def make_md_hash_64(compress, state_to_hash, length_to_bytes):
         message = md_pad_64(message, length_to_bytes, fake_byte_len=fake_byte_len)
         for i in range(0, len(message), 64):
             state = compress(message[i : i + 64], state)
+        # print({
+        #     'state': state,
+        #     'state_to_hash': bytes(state_to_hash(state)).hex(),
+        # })
         return state_to_hash(state)
 
     return md_hash
